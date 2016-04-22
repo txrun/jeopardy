@@ -1,5 +1,9 @@
 # Setup
 
+  `$ git clone https://jcsherin@bitbucket.org/jcsherin/jeopardy.git`
+  
+  `$ cd jeopardy`
+  
   `$ npm install`
   
 # Run
