@@ -3,8 +3,8 @@
 var $ = require('jquery');
 var _ = require('lodash');
 
-// Initialize variable for receiving list data
 var jeopardyList;
+var listingsCount = 100;
 
 // Fetch list data from URI into the variable and render to page
 $.get("https://api.myjson.com/bins/4ukwu", function (data) {
@@ -26,10 +26,31 @@ function rowHTML(item) {
 			</tr>`;
 }
 
-// The render method:
-// Append generated row markup within the DOM table body.
-function render() {
-	_.forEach(jeopardyList, function(item) {
+function renderJeopardyList(pageNo) {
+	let chunk = _.chunk(jeopardyList, listingsCount)[pageNo - 1];
+
+	_.forEach(chunk, function(item) {
 		$('tbody').append(rowHTML(item));
 	})
+}
+
+function pageLink(pageNo) {
+	return `<li><a href="javascript:void(0);">${pageNo}</a></li>`;
+}
+
+function paginatorHTML() {
+	let pageCount = Math.ceil(jeopardyList.length / listingsCount);
+	let pageNumbers = _.range(1, pageCount + 1);
+	let pageNumbersListHTML = _.map(pageNumbers, pageLink).join('\n');
+
+	return `<ol>${pageNumbersListHTML}</ol>`;
+}
+
+function renderJeopardyPaginator() {
+	$('.Jeopardy-paginator').append(paginatorHTML());
+}
+
+function render() {
+	renderJeopardyList(1);
+	renderJeopardyPaginator();
 }
