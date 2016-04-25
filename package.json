@@ -5,5 +5,8 @@
   },
   "scripts": {
     "start": "webpack-dev-server"
+  },
+  "dependencies": {
+    "jquery": "^2.2.3"
   }
 }
