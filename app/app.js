@@ -3,60 +3,109 @@
 var $ = require('jquery');
 var _ = require('lodash');
 
-var jeopardyList;
-var listingsCount = 100;
+var jeopardyListChunks = [];
+var rowsPerPage = 50;
 
-// Fetch list data from URI into the variable and render to page
-$.get("https://api.myjson.com/bins/4ukwu", function (data) {
-	jeopardyList = data;
-	render(undefined);
-});
+downloadListing(initializeAndRender);
 
-// Given an item generate table row HTML using template literals
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals
-function rowHTML(item) {
-	return `<tr>
-				<td>${item.air_date}</td>
-				<td>${item.show_number}</td>
-				<td>${item.round}</td>
-				<td>${item.category}</td>
-				<td>${item.value}</td>
-				<td>${item.question}</td>
-				<td>${item.answer}</td>
-			</tr>`;
+function downloadListing(callbackFn) {
+	$.get('https://api.myjson.com/bins/4ukwu', callbackFn);
 }
 
-function renderJeopardyList(pageNo) {
-	let chunk = _.chunk(jeopardyList, listingsCount)[pageNo - 1];
-	$('tbody').html(_.map(chunk, rowHTML).join('\n'));
+function initializeAndRender(list) {
+	jeopardyListChunks = _.chunk(list, rowsPerPage);
+	render();
 }
 
-function pageLink(pageNo) {
-	return $(`<a href="javascript:void(0);">${pageNo}</a>`);
+function render(event = null) {
+	let pageNo = _.isEmpty(event) ? 1 : event.data.pageNo;
+
+	let appRoot = $("#Jeopardy-App");
+	appRoot.html('');
+
+	renderHeader(appRoot);
+	renderTable(appRoot, pageNo);
+	renderPaginator(appRoot, pageNo);
 }
 
-function paginatorHTML() {
-	let pageCount = Math.ceil(jeopardyList.length / listingsCount);
-	let pageNumbers = _.range(1, pageCount + 1);
+function renderHeader(target) {
+	target.append($('<h1>Jeopardy</h1>'));
+}
 
+function renderTable(target, pageNo = 1) {
+	let table = $('<table></table>');
+	table.append(tableHeader());
+	table.append(tableBody(pageNo));
+	target.append(table);
+}
+
+function tableHeader() {
+	return (
+		`<thead>
+			<tr>
+				<th>Air Date</th>
+				<th>Show No.</th>
+				<th>Round</th>
+				<th>Category</th>
+				<th>Value</th>
+				<th>Question</th>
+				<th>Answer</th>
+			</tr>
+		</thead>`
+	);
+}
+
+function tableBody(pageNo = 1) {
+	let tbody = $('<tbody></tbody>');
+	_.forEach(tableRows(pageNo), function(tr) {
+		tbody.append(tr);
+	});
+	return tbody;
+}
+
+function tableRows(pageNo = 1) {
+	let chunkIndex = pageNo - 1;
+	return _.map(jeopardyListChunks[chunkIndex], tableRowHTML);
+}
+
+function tableRowHTML(item) {
+	return $(
+		`<tr>
+			<td>${item.air_date}</td>
+			<td>${item.show_number}</td>
+			<td>${item.round}</td>
+			<td>${item.category}</td>
+			<td>${item.value}</td>
+			<td>${item.question}</td>
+			<td>${item.answer}</td>
+		</tr>`);
+}
+
+function renderPaginator(target, activePage = 1) {
+	let container = $('<div class="Jeopardy-Paginator"></div>');
+	container.append(pageNumbersList(activePage));
+	target.append(container);
+}
+
+function pageNumbersList(activePage = 1) {
 	let ol = $('<ol></ol>');
-	_.forEach(pageNumbers, function (pageNo) {
-		let li = $('<li></li>');
-		let link = pageLink(pageNo);
-		li.append(link);
-		link.click({pageNo: pageNo}, render);
+	let pageCount = jeopardyListChunks.length;
+	let pageNumbers = _.range(1,  pageCount + 1);
+
+	let pagesListHTML = _.map(pageNumbers, listHTML);
+	_.forEach(pagesListHTML, function(li) {
 		ol.append(li);
 	});
 
 	return ol;
 }
 
-function renderJeopardyPaginator() {
-	$('.Jeopardy-paginator').html(paginatorHTML());
-}
+function listHTML(pageNo) {
+	let li = $('<li></li>');
 
-function render(event) {
-	let pageNo = event ? event.data.pageNo : 1;
-	renderJeopardyList(pageNo);
-	renderJeopardyPaginator();
+	let link = $(`<a href="javascript:void(0);">${pageNo}</a>`)
+	li.append(link);
+	link.click({pageNo: pageNo}, render);
+
+	return li;
 }
