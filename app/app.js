@@ -28,7 +28,8 @@ function render(event = null) {
 	renderPaginator(appRoot, pageNo);
 }
 
-function renderHeader(target) {
+
+function renderHeader(target, style) {
 	target.append($('<h1>Jeopardy</h1>'));
 }
 
@@ -71,7 +72,7 @@ function tableRows(pageNo = 1) {
 function tableRowHTML(item) {
 	return $(
 		`<tr>
-			<td>${item.air_date}</td>
+ 				<td>${item.air_date}</td>
 			<td>${item.show_number}</td>
 			<td>${item.round}</td>
 			<td>${item.category}</td>
@@ -88,7 +89,7 @@ function renderPaginator(target, activePage = 1) {
 }
 
 function pageNumbersList(activePage = 1) {
-	let ol = $('<ol></ol>');
+	let ol = $('<ul style="display:flex;justify-content:center;list-style:none"></ul>');
 	let pageCount = jeopardyListChunks.length;
 	let pageNumbers = _.range(1,  pageCount + 1);
 
@@ -100,12 +101,31 @@ function pageNumbersList(activePage = 1) {
 	return ol;
 }
 
-function listHTML(pageNo) {
-	let li = $('<li></li>');
+var marker = `a.highlite {
+	color:red;
+} `
 
-	let link = $(`<a href="javascript:void(0);">${pageNo}</a>`)
+//class=${marker[`.Jeopardy-Header`]}
+
+var current = document.getElementById('default');
+
+function highlite(el)
+{
+ if (current != null)
+ {
+     current.className = "";
+ }
+ el.className = "highlite";
+ current = el;
+}
+
+function listHTML(pageNo) {
+	let li = $('<li style="padding:5px;"></li>');
+
+	let link = $(`<a href="javascript:void(0);" style="text-decoration:none"id="default" class=${marker[`.highlite`]} onclick="highlite(this);">${pageNo}</a>`)
 	li.append(link);
 	link.click({pageNo: pageNo}, render);
 
 	return li;
 }
+
